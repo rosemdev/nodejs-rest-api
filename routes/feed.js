@@ -16,7 +16,7 @@ router.post(
 			.isString()
 			.isLength({ min: 5, max: 45 })
 			.trim(),
-		body('comtent', 'Please enter a valid content')
+		body('content', 'Please enter a valid content')
 			.isString()
 			.isLength({ min: 5 })
 			.trim(),
