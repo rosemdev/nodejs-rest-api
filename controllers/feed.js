@@ -80,3 +80,46 @@ exports.getPost = (req, res, next) => {
 			next(err);
 		});
 };
+
+exports.postEditPost = (req, res, next) => {
+	const errors = validationResult(req);
+
+	if (!errors.isEmpty()) {
+		const error = new Error('Validation Failed!');
+		error.statusCode = 422;
+
+		throw error;
+	}
+
+	const postId = req.params.postId;
+	const newTitle = req.body.title;
+	const newImageUrl = req.file && req.file.path.replace('\\', '/');
+	const newContent = req.body.content;
+
+	Post.findById(postId)
+		.then((post) => {
+			if (!post) {
+				const error = new Error('No post foound with the id: ' + postId);
+				error.statusCode = 404;
+				throw error;
+			}
+
+			post.title = newTitle;
+			post.content = newContent;
+
+			if (newImageUrl) {
+				post.imageUrl = newImageUrl;
+			}
+
+			return post.save();
+		})
+		.then((updatedPost) => {
+			res.status(200).json({ message: 'Post is updated', post: updatedPost });
+		})
+		.catch((err) => {
+			if (!err.statusCode) {
+				err.statusCode = 500;
+			}
+			next(err);
+		});
+};
