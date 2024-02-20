@@ -123,3 +123,19 @@ exports.postEditPost = (req, res, next) => {
 			next(err);
 		});
 };
+
+exports.deletePost = (req, res, next) => {
+	const postId = req.params.postId;
+
+	Post.deleteOne({ _id: postId })
+		.then((deletedCount) => {
+			console.log(deletedCount);
+			res.status(200).json({ message: 'Post is removed!' });
+		})
+		.catch((err) => {
+			if (!err.statusCode) {
+				err.statusCode = 500;
+			}
+			next(err);
+		});
+};

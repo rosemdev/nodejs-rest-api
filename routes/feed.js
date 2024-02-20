@@ -27,7 +27,7 @@ router.post(
 // GET /feed/posts
 router.get('/posts/:postId', feedController.getPost);
 
-// POST /feed/posts - edit
+// POST /feed/posts/postId - edit
 router.post('/posts/:postId',
     [
 		body('title', 'Please enter a valid title')
@@ -41,5 +41,8 @@ router.post('/posts/:postId',
 	],
     feedController.postEditPost
 );
+
+// DELETE /feed/posts/postId
+router.delete('/posts/:postId', feedController.deletePost);
 
 module.exports = router;
