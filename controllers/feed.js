@@ -129,7 +129,17 @@ exports.updatePost = (req, res, next) => {
 exports.deletePost = (req, res, next) => {
 	const postId = req.params.postId;
 
-	Post.deleteOne({ _id: postId })
+	Post.findById({ _id: postId })
+		.then((post) => {
+			if (!post) {
+				const error = new Error('No post foound with the id: ' + postId);
+				error.statusCode = 404;
+				throw error;
+			}
+
+			removeFile('images', post.imageUrl.slice(7));
+			return Post.deleteOne({ _id: postId });
+		})
 		.then((deletedCount) => {
 			console.log(deletedCount);
 			res.status(200).json({ message: 'Post is removed!' });
