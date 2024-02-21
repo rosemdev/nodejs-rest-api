@@ -27,8 +27,8 @@ router.post(
 // GET /feed/posts
 router.get('/posts/:postId', feedController.getPost);
 
-// POST /feed/posts/postId - edit
-router.post('/posts/:postId',
+// PUT /feed/posts/postId - edit
+router.put('/posts/:postId',
     [
 		body('title', 'Please enter a valid title')
 			.isString()
@@ -39,7 +39,7 @@ router.post('/posts/:postId',
 			.isLength({ min: 5 })
 			.trim(),
 	],
-    feedController.postEditPost
+    feedController.updatePost
 );
 
 // DELETE /feed/posts/postId

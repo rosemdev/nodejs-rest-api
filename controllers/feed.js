@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const Post = require('../models/post');
+const removeFile = require('../utils/removeFile');
 
 exports.getPosts = (req, res, next) => {
 	Post.find()
@@ -81,7 +82,7 @@ exports.getPost = (req, res, next) => {
 		});
 };
 
-exports.postEditPost = (req, res, next) => {
+exports.updatePost = (req, res, next) => {
 	const errors = validationResult(req);
 
 	if (!errors.isEmpty()) {
@@ -93,7 +94,7 @@ exports.postEditPost = (req, res, next) => {
 
 	const postId = req.params.postId;
 	const newTitle = req.body.title;
-	const newImageUrl = req.file && req.file.path.replace('\\', '/');
+	const newImageUrl = req.file.path.replace('\\', '/');
 	const newContent = req.body.content;
 
 	Post.findById(postId)
@@ -104,12 +105,13 @@ exports.postEditPost = (req, res, next) => {
 				throw error;
 			}
 
+			if (newImageUrl !== post.imageUrl) {
+				removeFile('images', post.imageUrl.slice(7));
+			}
+
 			post.title = newTitle;
 			post.content = newContent;
-
-			if (newImageUrl) {
-				post.imageUrl = newImageUrl;
-			}
+			post.imageUrl = newImageUrl;
 
 			return post.save();
 		})
