@@ -1,4 +1,5 @@
 const { validationResult } = require('express-validator');
+const io = require('../socket');
 const Post = require('../models/post');
 const User = require('../models/user');
 const removeFile = require('../utils/removeFile');
@@ -11,6 +12,7 @@ exports.getPosts = async (req, res, next) => {
 		const totalItems = await Post.find().countDocuments();
 		const posts = await Post.find()
 			.populate('creator')
+			.sort({ createdAt: -1 })
 			.skip((currentPage - 1) * perPage)
 			.limit(perPage);
 
@@ -61,6 +63,11 @@ exports.createPost = async (req, res, next) => {
 
 		user.posts.push(post);
 		await user.save();
+
+		io.getIO().emit('posts', {
+			action: 'create',
+			post: { ...post.doc, creator: { _id: req.userId, name: user.name } },
+		});
 
 		res.status(201).json({
 			message: 'Post created successfully!',
@@ -113,7 +120,7 @@ exports.updatePost = async (req, res, next) => {
 	const newContent = req.body.content;
 
 	try {
-		let post = await Post.findById(postId);
+		let post = await Post.findById(postId).populate('creator');
 
 		if (!post) {
 			const error = new Error('No post foound with the id: ' + postId);
@@ -121,7 +128,7 @@ exports.updatePost = async (req, res, next) => {
 			throw error;
 		}
 
-		if (post.creator.toString() !== req.userId) {
+		if (post.creator._id.toString() !== req.userId) {
 			const error = new Error('Not Authorized!');
 			error.statusCode = 403;
 			throw error;
@@ -136,6 +143,12 @@ exports.updatePost = async (req, res, next) => {
 		post.imageUrl = newImageUrl;
 
 		const updatedPost = await post.save();
+
+		io.getIO().emit('posts', {
+			action: 'update',
+			post: updatedPost,
+		});
+
 		res.status(200).json({ message: 'Post is updated', post: updatedPost });
 	} catch (err) {
 		if (!err.statusCode) {
@@ -178,6 +191,11 @@ exports.deletePost = async (req, res, next) => {
 		user.posts.pull(postId);
 
 		await user.save();
+
+		io.getIO().emit('posts', {
+			action: 'delete',
+			post: postId,
+		});
 
 		res.status(200).json({ message: 'Post is removed!' });
 	} catch (err) {
